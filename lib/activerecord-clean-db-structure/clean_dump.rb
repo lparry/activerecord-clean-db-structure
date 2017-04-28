@@ -27,20 +27,6 @@ module ActiveRecordCleanDbStructure
       # Remove useless comment lines
       dump.gsub!(/^--$/, '')
 
-      # Reduce noise for id fields by making them SERIAL instead of integer+sequence stuff
-      #
-      # This is a bit optimistic, but works as long as you don't have an id field thats not a sequence/uuid
-      dump.gsub!(/^    id integer NOT NULL,$/, '    id SERIAL PRIMARY KEY,')
-      dump.gsub!(/^    id bigint NOT NULL,$/, '    id BIGSERIAL PRIMARY KEY,')
-      dump.gsub!(/^    id uuid DEFAULT uuid_generate_v4\(\) NOT NULL,$/, '    id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,')
-      dump.gsub!(/^CREATE SEQUENCE \w+_id_seq\s+START WITH 1\s+INCREMENT BY 1\s+NO MINVALUE\s+NO MAXVALUE\s+CACHE 1;$/, '')
-      dump.gsub!(/^ALTER SEQUENCE \w+_id_seq OWNED BY .*;$/, '')
-      dump.gsub!(/^ALTER TABLE ONLY \w+ ALTER COLUMN id SET DEFAULT nextval\('\w+_id_seq'::regclass\);$/, '')
-      dump.gsub!(/^ALTER TABLE ONLY \w+\s+ADD CONSTRAINT \w+_pkey PRIMARY KEY \(id\);$/, '')
-      dump.gsub!(/^-- Name: (\w+\s+)?id; Type: DEFAULT$/, '')
-      dump.gsub!(/^-- .*_id_seq; Type: SEQUENCE.*/, '')
-      dump.gsub!(/^-- Name: (\w+\s+)?\w+_pkey; Type: CONSTRAINT$/, '')
-
       # Remove inherited tables
       inherited_tables_regexp = /-- Name: ([\w_]+); Type: TABLE\n\n[^;]+?INHERITS \([\w_]+\);/m
       inherited_tables = dump.scan(inherited_tables_regexp).map(&:first)
